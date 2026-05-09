@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebDesk OS</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/desktop.css">
+    <link rel="stylesheet" href="/static/css/window.css">
+    <link rel="stylesheet" href="/static/css/dock.css">
+    <link rel="stylesheet" href="/static/css/menu.css">
+    <link rel="stylesheet" href="/static/css/finder.css">
+</head>
+<body>
+    <!-- Menu Bar -->
+    <div id="menu-bar">
+        <div class="menu-left">
+            <div class="apple-menu"></div>
+            <div class="app-menu">
+                <span class="menu-item">Finder</span>
+                <span class="menu-item">File</span>
+                <span class="menu-item">Edit</span>
+                <span class="menu-item">View</span>
+                <span class="menu-item">Go</span>
+                <span class="menu-item">Window</span>
+                <span class="menu-item">Help</span>
+            </div>
+        </div>
+        <div class="menu-right">
+            <div class="status-icons">
+                <span class="status-icon" id="wifi-icon">📶</span>
+                <span class="status-icon" id="battery-icon">🔋</span>
+                <span class="status-icon" id="volume-icon">🔊</span>
+            </div>
+            <div class="clock-container">
+                <span id="clock-time">12:00 PM</span>
+                <span id="clock-date">Jan 1</span>
+            </div>
+            <div class="control-center" id="control-center-btn">☰</div>
+        </div>
+    </div>
+
+    <!-- Desktop Area -->
+    <div id="desktop">
+        <div id="desktop-icons"></div>
+        <div id="selection-rectangle" class="hidden"></div>
+    </div>
+
+    <!-- Notification Area -->
+    <div id="notification-area"></div>
+
+    <!-- Notification Center (slide-out) -->
+    <div id="notification-center" class="hidden">
+        <div class="nc-header">
+            <h3>Notification Center</h3>
+            <button class="close-nc" onclick="toggleNotificationCenter()">×</button>
+        </div>
+        <div id="nc-content"></div>
+    </div>
+
+    <!-- Dock -->
+    <div id="dock-container">
+        <div id="dock">
+            <div class="dock-item" data-app="finder" title="Finder">
+                <div class="dock-icon">📁</div>
+                <div class="dock-dot hidden"></div>
+            </div>
+            <div class="dock-item" data-app="launchpad" title="Launchpad">
+                <div class="dock-icon">🚀</div>
+                <div class="dock-dot hidden"></div>
+            </div>
+            <div class="dock-item" data-app="terminal" title="Terminal">
+                <div class="dock-icon">💻</div>
+                <div class="dock-dot hidden"></div>
+            </div>
+            <div class="dock-item" data-app="notes" title="Notes">
+                <div class="dock-icon">📝</div>
+                <div class="dock-dot hidden"></div>
+            </div>
+            <div class="dock-item" data-app="calculator" title="Calculator">
+                <div class="dock-icon">🔢</div>
+                <div class="dock-dot hidden"></div>
+            </div>
+            <div class="dock-item" data-app="weather" title="Weather">
+                <div class="dock-icon">🌤️</div>
+                <div class="dock-dot hidden"></div>
+            </div>
+            <div class="dock-item" data-app="settings" title="Settings">
+                <div class="dock-icon">⚙️</div>
+                <div class="dock-dot hidden"></div>
+            </div>
+            <div class="dock-divider"></div>
+            <div class="dock-item" data-app="trash" title="Trash">
+                <div class="dock-icon">🗑️</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Launchpad (full screen app grid) -->
+    <div id="launchpad" class="hidden">
+        <div class="launchpad-close" onclick="toggleLaunchpad()">×</div>
+        <div id="launchpad-grid"></div>
+        <input type="text" id="launchpad-search" placeholder="Search apps..." onkeyup="filterLaunchpad()">
+    </div>
+
+    <!-- Spotlight Search -->
+    <div id="spotlight" class="hidden">
+        <div id="spotlight-container">
+            <input type="text" id="spotlight-input" placeholder="Spotlight Search" autocomplete="off">
+            <div id="spotlight-results"></div>
+        </div>
+    </div>
+
+    <!-- Window Template (created dynamically) -->
+    <template id="window-template">
+        <div class="window">
+            <div class="window-titlebar">
+                <div class="window-controls">
+                    <button class="window-control close">×</button>
+                    <button class="window-control minimize">−</button>
+                    <button class="window-control maximize">□</button>
+                </div>
+                <div class="window-title">Window Title</div>
+                <div class="window-spacer"></div>
+            </div>
+            <div class="window-content"></div>
+            <div class="window-resize-handle resize-n"></div>
+            <div class="window-resize-handle resize-s"></div>
+            <div class="window-resize-handle resize-e"></div>
+            <div class="window-resize-handle resize-w"></div>
+            <div class="window-resize-handle resize-ne"></div>
+            <div class="window-resize-handle resize-nw"></div>
+            <div class="window-resize-handle resize-se"></div>
+            <div class="window-resize-handle resize-sw"></div>
+        </div>
+    </template>
+
+    <!-- Context Menu -->
+    <div id="context-menu" class="hidden">
+        <div class="context-menu-item" data-action="open">Open</div>
+        <div class="context-menu-item" data-action="rename">Rename</div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" data-action="copy">Copy</div>
+        <div class="context-menu-item" data-action="delete">Delete</div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" data-action="properties">Get Info</div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="/static/js/core.js"></script>
+    <script src="/static/js/desktop.js"></script>
+    <script src="/static/js/window.js"></script>
+    <script src="/static/js/dock.js"></script>
+    <script src="/static/js/menu.js"></script>
+    <script src="/static/js/context-menu.js"></script>
+    <script src="/static/js/notifications.js"></script>
+    <script src="/static/js/apps/terminal.js"></script>
+    <script src="/static/js/apps/notes.js"></script>
+    <script src="/static/js/apps/calculator.js"></script>
+    <script src="/static/js/apps/weather.js"></script>
+    <script src="/static/js/apps/settings.js"></script>
+</body>
+</html>

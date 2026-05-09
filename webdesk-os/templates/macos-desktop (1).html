@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>macOS Desktop</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-desktop: #1a1a2e;
+    --menubar-bg: rgba(30,30,32,0.85);
+    --menubar-text: rgba(255,255,255,0.92);
+    --dock-bg: rgba(255,255,255,0.12);
+    --dock-border: rgba(255,255,255,0.18);
+    --window-bg: #1d1d1f;
+    --window-header: #2a2a2d;
+    --window-border: rgba(255,255,255,0.1);
+    --sidebar-bg: rgba(255,255,255,0.04);
+    --text-primary: rgba(255,255,255,0.9);
+    --text-secondary: rgba(255,255,255,0.5);
+    --text-tertiary: rgba(255,255,255,0.3);
+    --accent: #0a84ff;
+    --accent-hover: #409cff;
+    --input-bg: rgba(255,255,255,0.08);
+    --divider: rgba(255,255,255,0.08);
+    --shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(255,255,255,0.08);
+    --radius: 12px;
+    --font: 'SF Pro Display', 'SF Pro Text', Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  [data-theme="light"] {
+    --menubar-bg: rgba(236,236,240,0.85);
+    --menubar-text: rgba(0,0,0,0.85);
+    --dock-bg: rgba(255,255,255,0.5);
+    --dock-border: rgba(0,0,0,0.12);
+    --window-bg: #f5f5f7;
+    --window-header: #e8e8ed;
+    --window-border: rgba(0,0,0,0.1);
+    --sidebar-bg: rgba(0,0,0,0.04);
+    --text-primary: rgba(0,0,0,0.85);
+    --text-secondary: rgba(0,0,0,0.5);
+    --text-tertiary: rgba(0,0,0,0.3);
+    --input-bg: rgba(0,0,0,0.06);
+    --divider: rgba(0,0,0,0.08);
+    --shadow: 0 20px 60px rgba(0,0,0,0.25), 0 0 0 0.5px rgba(0,0,0,0.1);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: var(--font);
+    width: 100vw; height: 100vh;
+    overflow: hidden;
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* DESKTOP */
+  #desktop {
+    width: 100%; height: 100%;
+    position: relative;
+    background: var(--bg-desktop);
+    overflow: hidden;
+  }
+  [data-theme="dark"] #desktop {
+    background: radial-gradient(ellipse at 30% 20%, #1a1a3e 0%, #0d0d1a 40%, #000510 100%);
+  }
+  [data-theme="light"] #desktop {
+    background: radial-gradient(ellipse at 30% 20%, #c8d8f0 0%, #b0c8e8 40%, #a0b8e0 100%);
+  }
+
+  /* Stars for dark mode */
+  #stars { position:absolute; inset:0; pointer-events:none; }
+  [data-theme="light"] #stars { opacity: 0; }
+
+  /* MENUBAR */
+  #menubar {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 28px;
+    background: var(--menubar-bg);
+    backdrop-filter: blur(20px) saturate(1.8);
+    -webkit-backdrop-filter: blur(20px) saturate(1.8);
+    border-bottom: 0.5px solid var(--divider);
+    display: flex; align-items: center;
+    padding: 0 16px;
+    z-index: 9000;
+    color: var(--menubar-text);
+    font-size: 13px;
+    gap: 18px;
+  }
+  #menubar .apple-logo { font-size: 16px; cursor: pointer; }
+  #menubar .app-name { font-weight: 600; }
+  #menubar .menu-items { display:flex; gap:14px; }
+  #menubar .menu-item { cursor:pointer; opacity:0.85; transition:opacity .15s; }
+  #menubar .menu-item:hover { opacity:1; }
+  #menubar .right-items { margin-left:auto; display:flex; align-items:center; gap:14px; font-size:12px; }
+  #clock { font-variant-numeric: tabular-nums; }
+
+  /* DOCK */
+  #dock-container {
+    position: absolute; bottom: 8px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 8000;
+  }
+  #dock {
+    background: var(--dock-bg);
+    backdrop-filter: blur(40px) saturate(1.8);
+    -webkit-backdrop-filter: blur(40px) saturate(1.8);
+    border: 1px solid var(--dock-border);
+    border-radius: 20px;
+    padding: 8px 12px;
+    display: flex; align-items: flex-end; gap: 6px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+  }
+  .dock-item {
+    display: flex; flex-direction: column; align-items: center;
+    cursor: pointer; position: relative;
+    transition: transform .2s cubic-bezier(.34,1.56,.64,1);
+  }
+  .dock-item:hover { transform: scale(1.4) translateY(-8px); }
+  .dock-item:hover ~ .dock-item { transform: scale(1.15) translateY(-3px); }
+  .dock-item.active::after {
+    content: ''; position: absolute; bottom: -6px;
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--text-primary);
+  }
+  .dock-icon {
+    width: 52px; height: 52px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: inherit;
+  }
+  .dock-sep { width: 1px; height: 40px; background: var(--dock-border); margin: 0 4px; align-self: center; }
+
+  /* WINDOWS */
+  .window {
+    position: absolute;
+    background: var(--window-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 0.5px solid var(--window-border);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    min-width: 300px; min-height: 200px;
+    transition: opacity .2s, transform .2s;
+  }
+  .window.minimized { opacity:0; transform: scale(0.1) translateY(400px); pointer-events:none; }
+  .window-header {
+    height: 44px;
+    background: var(--window-header);
+    display: flex; align-items: center;
+    padding: 0 16px;
+    cursor: grab;
+    flex-shrink: 0;
+    border-bottom: 0.5px solid var(--divider);
+    position: relative;
+  }
+  .window-header:active { cursor: grabbing; }
+  .traffic-lights { display:flex; gap:8px; z-index:1; }
+  .tl {
+    width: 14px; height: 14px; border-radius: 50%;
+    cursor: pointer; position: relative; transition: filter .15s;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; color: transparent;
+  }
+  .tl:hover { color: rgba(0,0,0,0.6); }
+  .tl-close { background: #ff5f57; }
+  .tl-min { background: #febc2e; }
+  .tl-max { background: #28c840; }
+  .window-title {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    font-size: 13px; font-weight: 500; color: var(--text-primary);
+    pointer-events: none;
+  }
+  .window-body { flex: 1; overflow: hidden; display: flex; }
+
+  /* FINDER */
+  #finder { width: 700px; height: 450px; top: 80px; left: 80px; }
+  .finder-sidebar {
+    width: 200px; flex-shrink: 0;
+    background: var(--sidebar-bg);
+    backdrop-filter: blur(10px);
+    border-right: 0.5px solid var(--divider);
+    padding: 12px 0; overflow-y:auto;
+  }
+  .finder-sidebar-section { margin-bottom: 16px; }
+  .finder-sidebar-label { font-size: 11px; font-weight: 600; color: var(--text-secondary); padding: 2px 16px 6px; text-transform: uppercase; letter-spacing: .05em; }
+  .finder-sidebar-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 16px; font-size: 13px; color: var(--text-primary);
+    cursor: pointer; border-radius: 6px; margin: 0 8px;
+    transition: background .15s;
+  }
+  .finder-sidebar-item:hover { background: rgba(128,128,128,0.15); }
+  .finder-sidebar-item.active { background: var(--accent); color: #fff; }
+  .finder-main { flex:1; padding: 16px; overflow-y:auto; }
+  .finder-toolbar { display:flex; gap:8px; margin-bottom:16px; align-items:center; }
+  .finder-search {
+    flex:1; height:28px; border-radius: 6px;
+    background: var(--input-bg); border: 0.5px solid var(--divider);
+    color: var(--text-primary); font-size: 13px; padding: 0 10px;
+    outline:none;
+  }
+  .finder-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px,1fr)); gap:16px; }
+  .finder-file { display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; padding:8px; border-radius:8px; transition:background .15s; }
+  .finder-file:hover { background: rgba(128,128,128,0.12); }
+  .finder-file-icon { font-size: 40px; }
+  .finder-file-name { font-size: 11px; color: var(--text-primary); text-align:center; max-width:80px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* TERMINAL */
+  #terminal { width: 600px; height: 400px; top: 100px; left: 200px; }
+  #terminal .window-header { background: #2a2a2d; }
+  .term-body {
+    flex:1; background: #1a1a1a; padding: 12px;
+    font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+    font-size: 13px; color: #00ff88; overflow-y: auto;
+    line-height: 1.6;
+  }
+  .term-line { display:flex; flex-wrap:wrap; }
+  .term-prompt { color: #0a84ff; white-space:nowrap; }
+  .term-path { color: #00ff88; white-space:nowrap; }
+  .term-sym { color: #fff; margin: 0 6px; }
+  .term-output { color: #ccc; width:100%; padding-left:0; }
+  .term-error { color: #ff5f57; width:100%; }
+  .term-input-line { display:flex; align-items:center; margin-top:2px; }
+  .term-input {
+    background: none; border: none; outline: none;
+    color: #fff; font-family: inherit; font-size: 13px;
+    flex:1; caret-color: #00ff88;
+  }
+
+  /* SAFARI */
+  #safari { width: 750px; height: 480px; top: 60px; left: 350px; }
+  .safari-toolbar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; background: var(--window-header);
+    border-bottom: 0.5px solid var(--divider);
+    flex-shrink:0;
+  }
+  .safari-btn { width:28px; height:28px; border-radius:6px; background:var(--input-bg); border:none; color:var(--text-secondary); cursor:pointer; font-size:14px; display:flex;align-items:center;justify-content:center; transition:background .15s; }
+  .safari-btn:hover { background: rgba(128,128,128,0.2); color: var(--text-primary); }
+  .safari-url {
+    flex:1; height:28px; border-radius:6px; background:var(--input-bg);
+    border: 0.5px solid var(--divider); color:var(--text-primary);
+    font-size:13px; padding:0 10px; outline:none; text-align:center;
+  }
+  .safari-content { flex:1; background: #fff; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:16px; color:#333; }
+  .safari-placeholder { text-align:center; }
+  .safari-placeholder h1 { font-size:40px; font-weight:700; color:#1d1d1f; margin-bottom:8px; }
+  .safari-placeholder p { color:#666; font-size:16px; }
+  .safari-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:16px; }
+  .safari-fav { display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer; }
+  .safari-fav-icon { width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 2px 8px rgba(0,0,0,0.15); }
+  .safari-fav-name { font-size:12px; color:#333; }
+
+  /* NOTES */
+  #notes { width: 520px; height: 400px; top: 120px; left: 500px; }
+  .notes-sidebar { width: 180px; background: var(--sidebar-bg); border-right: 0.5px solid var(--divider); flex-shrink:0; }
+  .notes-header { padding: 12px; font-size:12px; font-weight:600; color:var(--text-secondary); }
+  .note-item { padding: 10px 12px; cursor:pointer; border-radius:8px; margin:0 6px; transition:background .15s; }
+  .note-item:hover { background:rgba(128,128,128,0.12); }
+  .note-item.active { background: #febc2e22; }
+  .note-item-title { font-size:13px; font-weight:500; color:var(--text-primary); }
+  .note-item-preview { font-size:11px; color:var(--text-secondary); margin-top:2px; }
+  .notes-editor { flex:1; display:flex; flex-direction:column; }
+  .notes-toolbar { padding: 8px 12px; border-bottom: 0.5px solid var(--divider); display:flex; gap:6px; }
+  .notes-tool-btn { width:26px;height:26px;border-radius:5px;border:none;background:var(--input-bg);color:var(--text-primary);cursor:pointer;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center; }
+  .notes-textarea { flex:1;border:none;outline:none;background:transparent;color:var(--text-primary);font-family:var(--font);font-size:14px;padding:16px;resize:none;line-height:1.6; }
+
+  /* SYSTEM SETTINGS */
+  #settings { width: 660px; height: 440px; top: 90px; left: 150px; }
+  .settings-sidebar { width: 220px; background: var(--sidebar-bg); border-right: 0.5px solid var(--divider); padding: 16px 0; overflow-y:auto; }
+  .settings-search { margin: 0 12px 12px; height:28px; border-radius:6px; background:var(--input-bg); border:0.5px solid var(--divider); color:var(--text-primary); font-size:13px; padding:0 10px; outline:none; }
+  .settings-item { display:flex;align-items:center;gap:10px;padding:7px 16px;cursor:pointer;border-radius:6px;margin:0 8px;transition:background .15s;font-size:13px;color:var(--text-primary); }
+  .settings-item:hover { background:rgba(128,128,128,0.12); }
+  .settings-item.active { background:var(--accent);color:#fff; }
+  .settings-icon { width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px; }
+  .settings-main { flex:1; padding:24px; overflow-y:auto; }
+  .settings-section-title { font-size:20px; font-weight:700; color:var(--text-primary); margin-bottom:20px; }
+  .settings-card { background:var(--input-bg);border-radius:10px;overflow:hidden;margin-bottom:16px; }
+  .settings-row { display:flex;align-items:center;padding:12px 16px;gap:12px;border-bottom:0.5px solid var(--divider); }
+  .settings-row:last-child { border-bottom:none; }
+  .settings-row-label { font-size:14px;color:var(--text-primary);flex:1; }
+  .settings-row-sub { font-size:12px;color:var(--text-secondary); }
+  .toggle { width:44px;height:26px;border-radius:13px;position:relative;cursor:pointer;transition:background .2s;background:rgba(128,128,128,0.3);flex-shrink:0; }
+  .toggle.on { background: #34c759; }
+  .toggle::after { content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,0.3); }
+  .toggle.on::after { transform: translateX(18px); }
+
+  /* LAUNCHPAD */
+  #launchpad {
+    position: absolute; inset:0; z-index:7000;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(30px) saturate(1.2);
+    display:none; flex-direction:column;
+    align-items:center; justify-content:center;
+    padding-top:40px;
+  }
+  #launchpad.open { display:flex; }
+  .launchpad-grid { display:grid; grid-template-columns:repeat(7,90px); gap:24px 32px; }
+  .launchpad-item { display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer; }
+  .launchpad-item:hover .launchpad-icon { transform:scale(1.1); }
+  .launchpad-icon { width:70px;height:70px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:36px;box-shadow:0 4px 16px rgba(0,0,0,0.4);transition:transform .2s cubic-bezier(.34,1.56,.64,1); }
+  .launchpad-name { font-size:12px;color:#fff;text-align:center; }
+  .launchpad-close { margin-top:40px;color:rgba(255,255,255,0.5);font-size:13px;cursor:pointer;padding:8px 16px;border-radius:8px;transition:background .15s; }
+  .launchpad-close:hover { background:rgba(255,255,255,0.1); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:rgba(128,128,128,0.3);border-radius:3px; }
+
+  /* CONTEXT MENU */
+  #ctx-menu {
+    position:absolute; z-index:99999;
+    background: var(--window-header);
+    backdrop-filter:blur(20px);
+    border-radius:8px; padding:4px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.4), 0 0 0 0.5px var(--window-border);
+    min-width:180px; display:none;
+  }
+  .ctx-item { padding:6px 12px; font-size:13px; color:var(--text-primary); cursor:pointer; border-radius:5px; }
+  .ctx-item:hover { background: var(--accent); color:#fff; }
+  .ctx-sep { height:0.5px; background:var(--divider); margin:4px 0; }
+
+  /* Notification */
+  #notification {
+    position:absolute;top:38px;right:12px;z-index:9999;
+    background:var(--window-header);
+    backdrop-filter:blur(20px);
+    border-radius:12px;padding:14px 16px;
+    box-shadow:var(--shadow);
+    width:280px; display:none;
+    animation: slideIn .3s cubic-bezier(.34,1.56,.64,1);
+    border: 0.5px solid var(--window-border);
+  }
+  @keyframes slideIn { from{transform:translateX(100px);opacity:0}to{transform:translateX(0);opacity:1} }
+  .notif-title { font-size:13px;font-weight:600;color:var(--text-primary); }
+  .notif-body { font-size:12px;color:var(--text-secondary);margin-top:3px; }
+</style>
+</head>
+<body>
+<div id="desktop">
+  <!-- Stars canvas for dark mode -->
+  <canvas id="stars"></canvas>
+
+  <!-- MENU BAR -->
+  <div id="menubar">
+    <span class="apple-logo" onclick="showNotif('Apple Menu','System preferences and app management')">🍎</span>
+    <span class="app-name" id="active-app-name">Finder</span>
+    <div class="menu-items">
+      <span class="menu-item">File</span>
+      <span class="menu-item">Edit</span>
+      <span class="menu-item">View</span>
+      <span class="menu-item">Window</span>
+      <span class="menu-item">Help</span>
+    </div>
+    <div class="right-items">
+      <span onclick="toggleTheme()" style="cursor:pointer;font-size:16px;" title="Toggle Dark/Light">🌓</span>
+      <span>🔋</span>
+      <span>📶</span>
+      <span id="clock"></span>
+    </div>
+  </div>
+
+  <!-- LAUNCHPAD -->
+  <div id="launchpad">
+    <div class="launchpad-grid" id="launchpad-grid"></div>
+    <div class="launchpad-close" onclick="closeLaunchpad()">Press Escape to close</div>
+  </div>
+
+  <!-- WINDOWS -->
+  <div class="window" id="finder" style="display:none">
+    <div class="window-header" id="finder-hdr">
+      <div class="traffic-lights">
+        <div class="tl tl-close" onclick="closeWin('finder')">✕</div>
+        <div class="tl tl-min" onclick="minWin('finder')">−</div>
+        <div class="tl tl-max" onclick="maxWin('finder')">+</div>
+      </div>
+      <span class="window-title">Finder</span>
+    </div>
+    <div class="window-body">
+      <div class="finder-sidebar">
+        <div class="finder-sidebar-section">
+          <div class="finder-sidebar-label">Favorites</div>
+          <div class="finder-sidebar-item active" onclick="loadFolder('home')">🏠 Home</div>
+          <div class="finder-sidebar-item" onclick="loadFolder('desktop')">🖥 Desktop</div>
+          <div class="finder-sidebar-item" onclick="loadFolder('docs')">📄 Documents</div>
+          <div class="finder-sidebar-item" onclick="loadFolder('downloads')">⬇️ Downloads</div>
+          <div class="finder-sidebar-item" onclick="loadFolder('pics')">🖼 Pictures</div>
+          <div class="finder-sidebar-item" onclick="loadFolder('music')">🎵 Music</div>
+        </div>
+        <div class="finder-sidebar-section">
+          <div class="finder-sidebar-label">Locations</div>
+          <div class="finder-sidebar-item" onclick="loadFolder('macintosh')">💻 Macintosh HD</div>
+          <div class="finder-sidebar-item" onclick="loadFolder('network')">🌐 Network</div>
+        </div>
+      </div>
+      <div class="finder-main">
+        <div class="finder-toolbar">
+          <input class="finder-search" placeholder="🔍  Search" type="text">
+        </div>
+        <div class="finder-grid" id="finder-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="window" id="terminal" style="display:none">
+    <div class="window-header" id="terminal-hdr">
+      <div class="traffic-lights">
+        <div class="tl tl-close" onclick="closeWin('terminal')">✕</div>
+        <div class="tl tl-min" onclick="minWin('terminal')">−</div>
+        <div class="tl tl-max" onclick="maxWin('terminal')">+</div>
+      </div>
+      <span class="window-title" style="color:rgba(255,255,255,0.8)">Terminal — bash</span>
+    </div>
+    <div class="window-body">
+      <div class="term-body" id="term-body">
+        <div class="term-line"><span class="term-output">macOS Terminal — Type <strong>help</strong> for commands</span></div>
+        <div class="term-line"><span class="term-output" style="color:#888">Last login: Sat May 9 12:00:00</span></div>
+        <br>
+      </div>
+    </div>
+  </div>
+
+  <div class="window" id="safari" style="display:none">
+    <div class="window-header" id="safari-hdr">
+      <div class="traffic-lights">
+        <div class="tl tl-close" onclick="closeWin('safari')">✕</div>
+        <div class="tl tl-min" onclick="minWin('safari')">−</div>
+        <div class="tl tl-max" onclick="maxWin('safari')">+</div>
+      </div>
+      <span class="window-title">Safari</span>
+    </div>
+    <div class="window-body" style="flex-direction:column;">
+      <div class="safari-toolbar">
+        <button class="safari-btn" title="Back">‹</button>
+        <button class="safari-btn" title="Forward">›</button>
+        <button class="safari-btn" title="Reload">↻</button>
+        <input class="safari-url" id="safari-url" value="https://www.apple.com" placeholder="Search or enter URL">
+        <button class="safari-btn" title="Share">⊕</button>
+      </div>
+      <div class="safari-content" id="safari-content">
+        <div class="safari-placeholder">
+          <h1>Safari</h1>
+          <p>Start Page — Your favorite websites</p>
+          <div class="safari-grid">
+            <div class="safari-fav"><div class="safari-fav-icon" style="background:#fff">🍎</div><div class="safari-fav-name">Apple</div></div>
+            <div class="safari-fav"><div class="safari-fav-icon" style="background:#1877f2">f</div><div class="safari-fav-name" style="color:#1877f2">Facebook</div></div>
+            <div class="safari-fav"><div class="safari-fav-icon" style="background:#1da1f2">🐦</div><div class="safari-fav-name">Twitter</div></div>
+            <div class="safari-fav"><div class="safari-fav-icon" style="background:#ff0000">▶</div><div class="safari-fav-name">YouTube</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="window" id="notes" style="display:none">
+    <div class="window-header" id="notes-hdr">
+      <div class="traffic-lights">
+        <div class="tl tl-close" onclick="closeWin('notes')">✕</div>
+        <div class="tl tl-min" onclick="minWin('notes')">−</div>
+        <div class="tl tl-max" onclick="maxWin('notes')">+</div>
+      </div>
+      <span class="window-title">Notes</span>
+    </div>
+    <div class="window-body">
+      <div class="notes-sidebar">
+        <div class="notes-header">All Notes (3)</div>
+        <div class="note-item active" onclick="selectNote(0)">
+          <div class="note-item-title">Welcome Note 👋</div>
+          <div class="note-item-preview">Hello from macOS...</div>
+        </div>
+        <div class="note-item" onclick="selectNote(1)">
+          <div class="note-item-title">Ideas 💡</div>
+          <div class="note-item-preview">Build something amazing...</div>
+        </div>
+        <div class="note-item" onclick="selectNote(2)">
+          <div class="note-item-title">Shopping List 🛒</div>
+          <div class="note-item-preview">Coffee, Tea, Milk...</div>
+        </div>
+      </div>
+      <div class="notes-editor">
+        <div class="notes-toolbar">
+          <button class="notes-tool-btn" style="font-style:italic" onclick="fmt('italic')">I</button>
+          <button class="notes-tool-btn" onclick="fmt('bold')">B</button>
+          <button class="notes-tool-btn" onclick="fmt('underline')" style="text-decoration:underline">U</button>
+        </div>
+        <textarea class="notes-textarea" id="notes-area" placeholder="Start writing..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="window" id="settings" style="display:none">
+    <div class="window-header" id="settings-hdr">
+      <div class="traffic-lights">
+        <div class="tl tl-close" onclick="closeWin('settings')">✕</div>
+        <div class="tl tl-min" onclick="minWin('settings')">−</div>
+        <div class="tl tl-max" onclick="maxWin('settings')">+</div>
+      </div>
+      <span class="window-title">System Settings</span>
+    </div>
+    <div class="window-body">
+      <div class="settings-sidebar">
+        <input class="settings-search" placeholder="🔍  Search Settings" type="text">
+        <div class="settings-item active" onclick="setPanel('appearance')"><div class="settings-icon" style="background:#636366">🎨</div>Appearance</div>
+        <div class="settings-item" onclick="setPanel('wifi')"><div class="settings-icon" style="background:#0a84ff">📶</div>Wi-Fi</div>
+        <div class="settings-item" onclick="setPanel('bluetooth')"><div class="settings-icon" style="background:#0a84ff">🔷</div>Bluetooth</div>
+        <div class="settings-item" onclick="setPanel('display')"><div class="settings-icon" style="background:#636366">🖥</div>Displays</div>
+        <div class="settings-item" onclick="setPanel('sound')"><div class="settings-icon" style="background:#ff453a">🔊</div>Sound</div>
+        <div class="settings-item" onclick="setPanel('privacy')"><div class="settings-icon" style="background:#636366">🔒</div>Privacy</div>
+        <div class="settings-item" onclick="setPanel('notifications')"><div class="settings-icon" style="background:#ff9f0a">🔔</div>Notifications</div>
+        <div class="settings-item" onclick="setPanel('battery')"><div class="settings-icon" style="background:#34c759">🔋</div>Battery</div>
+      </div>
+      <div class="settings-main" id="settings-main"></div>
+    </div>
+  </div>
+
+  <!-- DOCK -->
+  <div id="dock-container">
+    <div id="dock" id="dock"></div>
+  </div>
+
+  <!-- CONTEXT MENU -->
+  <div id="ctx-menu">
+    <div class="ctx-item" onclick="newFolder()">New Folder</div>
+    <div class="ctx-item" onclick="changeWallpaper()">Change Wallpaper</div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" onclick="toggleTheme()">Toggle Dark/Light Mode</div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" onclick="showNotif('System','macOS Replica v1.0')">About This Mac</div>
+  </div>
+
+  <!-- NOTIFICATION -->
+  <div id="notification">
+    <div class="notif-title" id="notif-title"></div>
+    <div class="notif-body" id="notif-body"></div>
+  </div>
+</div>
+
+<script>
+// ============ CLOCK ============
+function updateClock() {
+  const now = new Date();
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const d = days[now.getDay()], mo = months[now.getMonth()], dt = now.getDate();
+  let h = now.getHours(), m = now.getMinutes().toString().padStart(2,'0');
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  document.getElementById('clock').textContent = `${d} ${mo} ${dt}  ${h}:${m} ${ampm}`;
+}
+updateClock(); setInterval(updateClock, 1000);
+
+// ============ STARS ============
+function drawStars() {
+  const c = document.getElementById('stars');
+  c.width = window.innerWidth; c.height = window.innerHeight;
+  const ctx = c.getContext('2d');
+  for (let i=0; i<150; i++) {
+    const x = Math.random()*c.width, y = Math.random()*c.height;
+    const r = Math.random()*1.2;
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fillStyle = `rgba(255,255,255,${Math.random()*0.7+0.1})`; ctx.fill();
+  }
+}
+drawStars(); window.addEventListener('resize', drawStars);
+
+// ============ THEME ============
+function toggleTheme() {
+  const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = t;
+  document.getElementById('stars').style.opacity = t === 'dark' ? '1' : '0';
+  showNotif('Appearance', `Switched to ${t} mode`);
+}
+
+// ============ APPS CONFIG ============
+const apps = [
+  { id:'finder', name:'Finder', icon:'🗂', color:'linear-gradient(135deg,#4fc3f7,#0288d1)' },
+  { id:'safari', name:'Safari', icon:'🧭', color:'linear-gradient(135deg,#64b5f6,#1e88e5)' },
+  { id:'notes', name:'Notes', icon:'📝', color:'linear-gradient(135deg,#fff176,#fbc02d)' },
+  { id:'terminal', name:'Terminal', icon:'⬛', color:'linear-gradient(135deg,#424242,#212121)' },
+  { id:'settings', name:'Settings', icon:'⚙️', color:'linear-gradient(135deg,#90a4ae,#546e7a)' },
+  { id:'launchpad', name:'Launchpad', icon:'🚀', color:'linear-gradient(135deg,#ce93d8,#7b1fa2)' },
+];
+const allApps = [
+  { id:'finder', name:'Finder', icon:'🗂', color:'linear-gradient(135deg,#4fc3f7,#0288d1)' },
+  { id:'safari', name:'Safari', icon:'🧭', color:'linear-gradient(135deg,#64b5f6,#1e88e5)' },
+  { id:'notes', name:'Notes', icon:'📝', color:'linear-gradient(135deg,#fff176,#fbc02d)' },
+  { id:'terminal', name:'Terminal', icon:'⬛', color:'linear-gradient(135deg,#424242,#212121)' },
+  { id:'settings', name:'Settings', icon:'⚙️', color:'linear-gradient(135deg,#90a4ae,#546e7a)' },
+  { id:'mail', name:'Mail', icon:'✉️', color:'linear-gradient(135deg,#4fc3f7,#0077b6)' },
+  { id:'calendar', name:'Calendar', icon:'📅', color:'linear-gradient(135deg,#ff8a65,#e64a19)' },
+  { id:'photos', name:'Photos', icon:'🖼', color:'linear-gradient(135deg,#f48fb1,#c2185b)' },
+  { id:'music', name:'Music', icon:'🎵', color:'linear-gradient(135deg,#f48fb1,#880e4f)' },
+  { id:'maps', name:'Maps', icon:'🗺', color:'linear-gradient(135deg,#a5d6a7,#2e7d32)' },
+  { id:'messages', name:'Messages', icon:'💬', color:'linear-gradient(135deg,#80cbc4,#00695c)' },
+  { id:'facetime', name:'FaceTime', icon:'📹', color:'linear-gradient(135deg,#a5d6a7,#1b5e20)' },
+  { id:'appstore', name:'App Store', icon:'📦', color:'linear-gradient(135deg,#90caf9,#1565c0)' },
+  { id:'launchpad', name:'Launchpad', icon:'🚀', color:'linear-gradient(135deg,#ce93d8,#7b1fa2)' },
+];
+
+// ============ DOCK ============
+const dock = document.getElementById('dock');
+apps.forEach(app => {
+  const el = document.createElement('div');
+  el.className = 'dock-item'; el.id = 'dock-'+app.id;
+  el.title = app.name;
+  el.innerHTML = `<div class="dock-icon" style="background:${app.color}">${app.icon}</div>`;
+  el.onclick = () => openApp(app.id);
+  dock.appendChild(el);
+});
+
+// ============ LAUNCHPAD ============
+const lpGrid = document.getElementById('launchpad-grid');
+allApps.forEach(app => {
+  const el = document.createElement('div');
+  el.className = 'launchpad-item';
+  el.innerHTML = `<div class="launchpad-icon" style="background:${app.color}">${app.icon}</div><div class="launchpad-name">${app.name}</div>`;
+  el.onclick = () => { closeLaunchpad(); setTimeout(() => openApp(app.id), 300); };
+  lpGrid.appendChild(el);
+});
+function closeLaunchpad() { document.getElementById('launchpad').classList.remove('open'); }
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeLaunchpad(); });
+
+// ============ WINDOW MANAGEMENT ============
+let zTop = 100;
+const winPositions = {};
+function openApp(id) {
+  if (id === 'launchpad') { document.getElementById('launchpad').classList.add('open'); return; }
+  const win = document.getElementById(id);
+  if (!win) { showNotif(id.charAt(0).toUpperCase()+id.slice(1), 'App coming soon!'); return; }
+  win.style.display = 'flex';
+  win.classList.remove('minimized');
+  bringToFront(win);
+  document.getElementById('dock-'+id)?.classList.add('active');
+  document.getElementById('active-app-name').textContent = apps.find(a=>a.id===id)?.name || id;
+  if (!winPositions[id]) {
+    const offsets = { finder:[80,60], terminal:[200,100], safari:[350,60], notes:[500,120], settings:[150,90] };
+    const [l,t] = offsets[id] || [120,80];
+    win.style.left = l+'px'; win.style.top = t+'px';
+    winPositions[id] = true;
+  }
+}
+function closeWin(id) {
+  document.getElementById(id).style.display = 'none';
+  document.getElementById('dock-'+id)?.classList.remove('active');
+}
+function minWin(id) {
+  document.getElementById(id).classList.add('minimized');
+  document.getElementById('dock-'+id)?.classList.remove('active');
+}
+function maxWin(id) {
+  const win = document.getElementById(id);
+  if (win.dataset.maximized === '1') {
+    win.style.width = win.dataset.ow; win.style.height = win.dataset.oh;
+    win.style.top = win.dataset.ot; win.style.left = win.dataset.ol;
+    win.dataset.maximized = '0';
+  } else {
+    win.dataset.ow = win.style.width; win.dataset.oh = win.style.height;
+    win.dataset.ot = win.style.top; win.dataset.ol = win.style.left;
+    win.style.top = '28px'; win.style.left = '0';
+    win.style.width = '100vw'; win.style.height = 'calc(100vh - 28px - 80px)';
+    win.dataset.maximized = '1';
+  }
+}
+function bringToFront(win) { win.style.zIndex = ++zTop; }
+
+// Drag windows
+document.querySelectorAll('[id$="-hdr"]').forEach(hdr => {
+  let drag=false, ox=0, oy=0, win;
+  hdr.addEventListener('mousedown', e => {
+    if (e.target.classList.contains('tl')) return;
+    win = hdr.parentElement; drag = true;
+    ox = e.clientX - win.offsetLeft; oy = e.clientY - win.offsetTop;
+    bringToFront(win);
+  });
+  document.addEventListener('mousemove', e => {
+    if (!drag) return;
+    win.style.left = (e.clientX-ox)+'px';
+    win.style.top = Math.max(28,e.clientY-oy)+'px';
+  });
+  document.addEventListener('mouseup', () => { drag=false; });
+});
+
+// Click to front
+document.querySelectorAll('.window').forEach(w => {
+  w.addEventListener('mousedown', () => bringToFront(w));
+});
+
+// ============ FINDER ============
+const folderData = {
+  home: [{icon:'🗂',name:'Documents'},{icon:'⬇️',name:'Downloads'},{icon:'🖼',name:'Pictures'},{icon:'🎵',name:'Music'},{icon:'🎬',name:'Movies'},{icon:'💾',name:'Desktop'},{icon:'📦',name:'Applications'},{icon:'📁',name:'Library'}],
+  desktop: [{icon:'📄',name:'resume.pdf'},{icon:'🖼',name:'screenshot.png'},{icon:'📁',name:'Projects'},{icon:'📝',name:'notes.txt'}],
+  docs: [{icon:'📄',name:'report.docx'},{icon:'📊',name:'budget.xlsx'},{icon:'📑',name:'contract.pdf'},{icon:'📝',name:'draft.md'}],
+  downloads: [{icon:'📦',name:'app.dmg'},{icon:'🗜',name:'archive.zip'},{icon:'🖼',name:'photo.jpg'},{icon:'🎵',name:'song.mp3'}],
+  pics: [{icon:'🖼',name:'vacation.jpg'},{icon:'🌅',name:'sunset.png'},{icon:'📸',name:'portrait.jpg'},{icon:'🎨',name:'artwork.png'}],
+  music: [{icon:'🎵',name:'playlist.m3u'},{icon:'🎸',name:'guitar.mp3'},{icon:'🎹',name:'piano.mp3'}],
+  macintosh: [{icon:'⚙️',name:'System'},{icon:'📦',name:'Applications'},{icon:'👤',name:'Users'},{icon:'📁',name:'Library'},{icon:'🗑',name:'Trash'}],
+  network: [{icon:'🌐',name:'Network'},{icon:'☁️',name:'iCloud Drive'}]
+};
+function loadFolder(name) {
+  document.querySelectorAll('.finder-sidebar-item').forEach(i=>i.classList.remove('active'));
+  event.target.classList.add('active');
+  const grid = document.getElementById('finder-grid');
+  grid.innerHTML = (folderData[name]||[]).map(f=>`<div class="finder-file"><div class="finder-file-icon">${f.icon}</div><div class="finder-file-name">${f.name}</div></div>`).join('');
+}
+loadFolder('home');
+
+// ============ TERMINAL ============
+const termBody = document.getElementById('term-body');
+const notes = ['Welcome to macOS!\nThis is a simulation.', 'Ideas:\n- Build great things\n- Stay creative', 'Shopping List:\n- Coffee\n- Tea\n- Milk'];
+let noteIdx = 0;
+const noteArea = document.getElementById('notes-area');
+noteArea.value = notes[0];
+function selectNote(i) { noteIdx=i; noteArea.value=notes[i]; document.querySelectorAll('.note-item').forEach((n,j)=>n.classList.toggle('active',i===j)); }
+
+function addTermLine(html, cls='') {
+  const div = document.createElement('div');
+  div.className = 'term-line';
+  div.innerHTML = `<span class="${cls||'term-output'}">${html}</span>`;
+  termBody.insertBefore(div, document.querySelector('.term-input-line') || null);
+  termBody.scrollTop = termBody.scrollHeight;
+}
+
+const cmds = {
+  help: () => `<span style="color:#0a84ff;font-weight:600">Available commands:</span><br>ls, pwd, whoami, date, echo, clear, neofetch, uptime, uname, history, open`,
+  ls: () => `Applications&nbsp;&nbsp;Desktop&nbsp;&nbsp;Documents&nbsp;&nbsp;Downloads&nbsp;&nbsp;Library&nbsp;&nbsp;Movies&nbsp;&nbsp;Music&nbsp;&nbsp;Pictures&nbsp;&nbsp;Public`,
+  pwd: () => `/Users/user`,
+  whoami: () => `user`,
+  date: () => new Date().toString(),
+  uptime: () => `up 3 days, 14:22, 1 user, load averages: 1.23 0.87 0.64`,
+  uname: () => `Darwin MacBook-Pro.local 23.0.0 Darwin Kernel Version 23.0.0`,
+  history: () => `1 ls<br>2 pwd<br>3 whoami<br>4 neofetch<br>5 help`,
+  neofetch: () => `<pre style="color:#00ff88;font-family:monospace;font-size:11px">
+       <span style="color:#0a84ff">██████████</span>    <span style="color:#fff;font-weight:600">user</span><span style="color:#888">@</span><span style="color:#fff;font-weight:600">MacBook-Pro</span>
+      <span style="color:#0a84ff">████████████</span>   <span style="color:#888">─────────────────</span>
+     <span style="color:#0a84ff">██████████████</span>  OS: macOS Sonoma 14.0
+    <span style="color:#0a84ff">████</span>  <span style="color:#0a84ff">████</span>  <span style="color:#0a84ff">████</span> Kernel: 23.0.0
+    <span style="color:#0a84ff">████</span>  <span style="color:#0a84ff">████</span>  <span style="color:#0a84ff">████</span> Uptime: 3 days
+    <span style="color:#0a84ff">████</span>  <span style="color:#0a84ff">████</span>  <span style="color:#0a84ff">████</span> Shell: bash 5.2.15
+     <span style="color:#0a84ff">██████████████</span>  Terminal: macOS
+      <span style="color:#0a84ff">████████████</span>   CPU: Apple M3 Pro
+       <span style="color:#0a84ff">██████████</span>    Memory: 18 GB</pre>`,
+  clear: () => null,
+  open: (args) => { if(args[1]) showNotif('Open', `Opening "${args[1]}"`); return args[1] ? `Opening ${args[1]}` : 'Usage: open <file>'; }
+};
+
+function initTerminal() {
+  const line = document.createElement('div');
+  line.className = 'term-input-line term-line';
+  line.innerHTML = `<span class="term-prompt">user</span><span class="term-path">@MacBook-Pro</span><span class="term-sym">%</span><input class="term-input" id="term-input" autofocus spellcheck="false">`;
+  termBody.appendChild(line);
+  const input = document.getElementById('term-input');
+  input.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const val = input.value.trim();
+    input.value = '';
+    if (!val) return;
+    const args = val.split(' ');
+    const cmd = args[0].toLowerCase();
+    addTermLine(`<span style="color:#0a84ff">user</span><span style="color:#00ff88">@MacBook-Pro</span> <span style="color:#fff">%</span> ${val}`);
+    if (cmd === 'clear') { termBody.querySelectorAll('.term-line:not(.term-input-line)').forEach(l=>l.remove()); return; }
+    const fn = cmds[cmd];
+    if (fn) { const out = fn(args); if(out!==null) addTermLine(out); }
+    else addTermLine(`bash: ${cmd}: command not found`, 'term-error');
+    termBody.scrollTop = termBody.scrollHeight;
+  });
+}
+document.getElementById('terminal').addEventListener('click', () => document.getElementById('term-input')?.focus());
+
+// ============ SETTINGS ============
+const panels = {
+  appearance: `<div class="settings-section-title">Appearance</div>
+    <div class="settings-card">
+      <div class="settings-row"><div><div class="settings-row-label">Dark Mode</div><div class="settings-row-sub">Use the dark appearance</div></div><div class="toggle on" onclick="this.classList.toggle('on');toggleTheme()"></div></div>
+      <div class="settings-row"><div class="settings-row-label">Accent Color</div><div style="display:flex;gap:6px">${['#0a84ff','#ff453a','#32d74b','#ff9f0a','#bf5af2'].map(c=>`<div style="width:18px;height:18px;border-radius:50%;background:${c};cursor:pointer" onclick="document.documentElement.style.setProperty('--accent','${c}')"></div>`).join('')}</div></div>
+      <div class="settings-row"><div class="settings-row-label">Reduce Motion</div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+    </div>
+    <div class="settings-card">
+      <div class="settings-row"><div class="settings-row-label">Show scroll bars</div><div style="font-size:13px;color:var(--text-secondary)">Automatically ›</div></div>
+      <div class="settings-row"><div class="settings-row-label">Default web browser</div><div style="font-size:13px;color:var(--text-secondary)">Safari ›</div></div>
+    </div>`,
+  wifi: `<div class="settings-section-title">Wi-Fi</div>
+    <div class="settings-card">
+      <div class="settings-row"><div class="settings-row-label">Wi-Fi</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+    </div>
+    <div class="settings-card">
+      <div class="settings-row"><div><div class="settings-row-label">🔒 Home Network</div><div class="settings-row-sub">Connected ✓</div></div><div style="color:var(--text-secondary);font-size:12px">📶</div></div>
+      <div class="settings-row"><div class="settings-row-label">Office_5G</div><div style="color:var(--text-secondary);font-size:12px">📶</div></div>
+      <div class="settings-row"><div class="settings-row-label">CafeWifi</div><div style="color:var(--text-secondary);font-size:12px">📶</div></div>
+    </div>`,
+  display: `<div class="settings-section-title">Displays</div>
+    <div class="settings-card">
+      <div class="settings-row"><div class="settings-row-label">Resolution</div><div style="color:var(--text-secondary);font-size:13px">Default for display</div></div>
+      <div class="settings-row"><div class="settings-row-label">Brightness</div><input type="range" style="flex:1;margin-left:12px" min="0" max="100" value="80"></div>
+      <div class="settings-row"><div class="settings-row-label">True Tone</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+      <div class="settings-row"><div class="settings-row-label">Night Shift</div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+    </div>`,
+  sound: `<div class="settings-section-title">Sound</div>
+    <div class="settings-card">
+      <div class="settings-row"><div class="settings-row-label">Output Volume</div><input type="range" style="flex:1;margin-left:12px" min="0" max="100" value="60"></div>
+      <div class="settings-row"><div class="settings-row-label">Alert Volume</div><input type="range" style="flex:1;margin-left:12px" min="0" max="100" value="40"></div>
+      <div class="settings-row"><div class="settings-row-label">Play sound on startup</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+    </div>`,
+  privacy: `<div class="settings-section-title">Privacy & Security</div>
+    <div class="settings-card">
+      <div class="settings-row"><div class="settings-row-label">Location Services</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+      <div class="settings-row"><div class="settings-row-label">Camera Access</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+      <div class="settings-row"><div class="settings-row-label">Microphone Access</div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+      <div class="settings-row"><div class="settings-row-label">FileVault</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+    </div>`,
+  notifications: `<div class="settings-section-title">Notifications</div>
+    <div class="settings-card">
+      <div class="settings-row"><div class="settings-row-label">Allow Notifications</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+      <div class="settings-row"><div class="settings-row-label">Do Not Disturb</div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+    </div>`,
+  battery: `<div class="settings-section-title">Battery</div>
+    <div style="text-align:center;padding:20px 0"><div style="font-size:48px">🔋</div><div style="font-size:28px;font-weight:700;color:var(--text-primary);margin-top:8px">87%</div><div style="color:var(--text-secondary);font-size:13px">Power Adapter Connected</div></div>
+    <div class="settings-card">
+      <div class="settings-row"><div class="settings-row-label">Low Power Mode</div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+      <div class="settings-row"><div class="settings-row-label">Optimized Battery Charging</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+    </div>`
+};
+function setPanel(p) {
+  document.querySelectorAll('.settings-item').forEach(i=>i.classList.remove('active'));
+  event.target.closest('.settings-item').classList.add('active');
+  document.getElementById('settings-main').innerHTML = panels[p] || '';
+}
+setPanel('appearance');
+
+// ============ NOTES FORMAT ============
+function fmt(cmd) { document.getElementById('notes-area').focus(); document.execCommand(cmd); }
+
+// ============ CONTEXT MENU ============
+const ctx = document.getElementById('ctx-menu');
+document.getElementById('desktop').addEventListener('contextmenu', e => {
+  e.preventDefault();
+  ctx.style.display = 'block';
+  ctx.style.left = Math.min(e.clientX, window.innerWidth-200)+'px';
+  ctx.style.top = Math.min(e.clientY, window.innerHeight-180)+'px';
+});
+document.addEventListener('click', () => ctx.style.display = 'none');
+
+function newFolder() { showNotif('Finder', 'New Folder created on Desktop'); }
+function changeWallpaper() { showNotif('Desktop', 'Wallpaper options coming soon!'); }
+
+// ============ NOTIFICATION ============
+let notifTimer;
+function showNotif(title, body) {
+  const n = document.getElementById('notification');
+  document.getElementById('notif-title').textContent = title;
+  document.getElementById('notif-body').textContent = body;
+  n.style.display = 'block';
+  clearTimeout(notifTimer);
+  notifTimer = setTimeout(() => n.style.display = 'none', 3500);
+}
+
+// ============ INIT ============
+openApp('finder');
+initTerminal();
+setTimeout(() => showNotif('Welcome!', 'Click dock icons to open apps.'), 1000);
+</script>
+</body>
+</html>
