@@ -1,0 +1,15 @@
+{
+  "theme": "dark",
+  "dock_position": "bottom",
+  "dock_size": "medium",
+  "icon_size": "medium",
+  "clock_format": "12h",
+  "wallpaper": "default",
+  "pinned_apps": [
+    "finder",
+    "terminal",
+    "notes",
+    "calculator"
+  ],
+  "recent_apps": []
+}
